@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load account_timedelta %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+  <h1>Статистика</h1>
+  <p>Текущее время {% now "jS F Y H:i:s" %}</p>
+  <table class="table">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col">№</th>
+            <th scope="col">Статус</th>
+            <th scope="col">Начало с</th>
+            <th scope="col">Продолжительность</th>
+        </tr>
+        </thead>
+        <tbody>
+            {% for i in free_time %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>{{ i.status }}</td>
+                <td>{{ i.created_at }}</td>
+                <td>{{ i.duration|account_timedelta }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+{% endblock %}

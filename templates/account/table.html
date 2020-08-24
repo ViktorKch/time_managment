@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load breaktime %}
+
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+  <div class="container-fluid">
+  <div class="row">
+    <div class="col">
+  <h5>На работе: {{ humans_on_work }}</h5>
+  <h5>На перерыве: {{ humans_on_break }}</h5>
+  <h5>На обеде: {{ humans_on_lunch }}</h5>
+    </div>
+    <div class="col-6">
+    <h5>Очередь на перерыв</h5>
+    {% if queue_status %}
+        <table class="table table-sm">
+            <thead>
+            <tr>
+                <th scope="col">№</th>
+                <th scope="col">Имя</th>
+                <th scope="col">Фамилия</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for status in queue_status %}
+                {% if status.user == request.user %}
+                    <tr class="table-secondary">
+                        <th scope="row">{{ forloop.counter }}</th>
+                        <td>{{ status.user.first_name }}</td>
+                        <td>{{ status.user.last_name }}</td>
+
+                    </tr>
+                {% else %}
+                    <tr>
+                        <th scope="row">{{ forloop.counter }}</th>
+                        <td>{{ status.user.first_name }}</td>
+                        <td>{{ status.user.last_name }}</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+    </div>
+    </div>
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    <form action="{% url 'check_state' %}" method="POST">
+    {% csrf_token %}
+
+    {% if user.on_work == True %}
+        <button type="submit" class="btn btn-primary" name="status" value="lunch">Обед</button>
+        <button type="submit" class="btn btn-success" name="status" value="work">Работаю</button>
+        <button type="submit" class="btn btn-warning" name="status" value="break">Перерыв</button>
+        <button type="submit" class="btn btn-info" name="status" value="ex_break">Экстренный перерыв</button>
+        <button type="submit" class="btn btn-dark" name="status" value="out_work">Уйти с работы</button>
+    {% endif %}
+    {% if user.on_work == False %}
+        <button type="submit" class="btn btn-dark" name="status" value="on_work">Вернуться на работу</button>
+    {% endif %}
+    </form>
+    <table class="table">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col">№</th>
+            <th scope="col">Имя</th>
+            <th scope="col">Фамилия</th>
+            <th scope="col">Статус</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for stat in stats %}
+            {% if stat.on_work == True and stat.user == request.user %}
+                <tr class="table-secondary">
+                    <th scope="row">{{ forloop.counter }}</th>
+                    <td>{{ stat.user.first_name }}</td>
+                    <td>{{ stat.user.last_name }}</td>
+                    {% if  stat.status|stringformat:'s' == "Обед" %}
+                        <td><span class="badge badge-primary">{{ stat.status }} c {{ stat.updated_at|time:"H:i" }}</span></td>
+                    {% elif stat.status|stringformat:'s' == "Перерыв" and stat.updated_at|breaktime %}
+                        <td><span class="badge badge-danger">{{ stat.status }} c {{ stat.updated_at|time:"H:i" }}</span></td>
+                    {% elif stat.status|stringformat:'s' == "Перерыв" %}
+                        <td><span class="badge badge-warning">{{ stat.status }} c {{ stat.updated_at|time:"H:i" }}</span></td>
+                    {% elif stat.status|stringformat:'s' == "Экстренный перерыв" %}
+                        <td><span class="badge badge-info">{{ stat.status }} c {{ stat.updated_at|time:"H:i" }}</span></td>
+                    {% elif stat.status|stringformat:'s' == "Работаю" %}
+                        <td><span class="badge badge-success">{{ stat.status }}</span></td>
+                    {% endif %}
+                </tr>
+            {% elif stat.on_work == True %}
+                <tr>
+                    <th scope="row">{{ forloop.counter }}</th>
+                    <td>{{ stat.user.first_name }}</td>
+                    <td>{{ stat.user.last_name }}</td>
+                    {% if  stat.status|stringformat:'s' == "Обед" %}
+                        <td><span class="badge badge-primary">{{ stat.status }} c {{ stat.updated_at|time:"H:i" }}</span></td>
+                    {% elif stat.status|stringformat:'s' == "Перерыв" and stat.updated_at|breaktime %}
+                        <td><span class="badge badge-danger">{{ stat.status }} c {{ stat.updated_at|time:"H:i" }}</span></td>
+                    {% elif stat.status|stringformat:'s' == "Перерыв" %}
+                        <td><span class="badge badge-warning">{{ stat.status }} c {{ stat.updated_at|time:"H:i" }}</span></td>
+                    {% elif stat.status|stringformat:'s' == "Экстренный перерыв" %}
+                        <td><span class="badge badge-info">{{ stat.status }} c {{ stat.updated_at|time:"H:i" }}</span></td>
+                    {% elif stat.status|stringformat:'s' == "Работаю" %}
+                        <td><span class="badge badge-success">{{ stat.status }}</span></td>
+                    {% endif %}
+                </tr>
+            {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
